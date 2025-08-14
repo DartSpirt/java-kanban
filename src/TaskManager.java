@@ -85,21 +85,34 @@ public class TaskManager {
 
 
     public void updateTask(long inputId, Task task) {
-            tasks.put(inputId, task);
+        Task currentTask = tasks.get(inputId);
+        if (currentTask != null) {
+            String currentStatus = currentTask.getStatus();
+            if (!"IN_PROGRESS".equals(currentStatus) && !"DONE".equals(currentStatus)) {
+                tasks.put(inputId, task);
+            } else {
+                System.out.println("Изменение статуса на NEW запрещено для задач в статусе IN_PROGRESS или DONE");
+            }
         }
+    }
+
 
     public void updateSubtask(long inputId, Subtask subtask) {
         if (subtasks.containsKey(inputId)) {
-            Epic epic = epics.get(subtasksEpic.get(inputId));
-            ArrayList<Subtask> subtasksList = epic.getSubtaskList();
-            int index = subtasksList.indexOf(subtasks.get(inputId));
-            if (index != -1) {
-                subtasksList.set(index, subtask);
-                epic.setSubtaskList(subtasksList);
-                subtasks.put(inputId, subtask);
+            Subtask currentSubtask = subtasks.get(inputId);
+            String currentStatus = currentSubtask.getStatus();
+            if (!"IN_PROGRESS".equals(currentStatus) && !"DONE".equals(currentStatus)) {
+                Epic epic = epics.get(subtasksEpic.get(inputId));
+                ArrayList<Subtask> subtasksList = epic.getSubtaskList();
+                int index = subtasksList.indexOf(subtasks.get(inputId));
+                if (index != -1) {
+                    subtasksList.set(index, subtask);
+                    epic.setSubtaskList(subtasksList);
+                    subtasks.put(inputId, subtask);
+                }
+            } else {
+                System.out.println("Изменение статуса на NEW запрещено для подзадач в статусе IN_PROGRESS или DONE");
             }
-            subtask.setCompleted(true);
-            recalculateEpicStatus(epic); // Вызываем метод для пересчёта статуса эпика
         }
     }
 
@@ -116,14 +129,13 @@ public class TaskManager {
     public void deleteEpic(long inputId) {
         if (!epics.containsKey(inputId)) {
             throw new IllegalArgumentException("Эпика с таким id нет");
-        } else {
-            epics.remove(inputId);
-            ArrayList<Subtask> subtasksList = epicsSubtask.get(inputId);
-            if (subtasksList != null) {
-                subtasksList.clear();
-            }
-            System.out.println("Эпик удалён");
         }
+        epics.remove(inputId);
+        ArrayList<Subtask> subtasksList = epicsSubtask.get(inputId);
+        if (subtasksList != null) {
+            subtasksList.clear();
+        }
+        System.out.println("Эпик удалён");
     }
 
     public void deleteSubtask(long inputId) {
